@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Hook to verify that python files which are about to be committed
+# comply with pep8 style guides.
+
+# E501 line too long (80 characters)
+IGNORE=E501
+
+FILES=$(git diff --cached --name-status | grep -e ^A -e ^M | \
+awk '$1 $2 { print $2}' | grep .py$)
+
+# Stash any changes to the working tree that are not going to be committed
+git stash -q --keep-index
+
+if [ -n "$FILES" ]; then
+pep8 --ignore $IGNORE -r $FILES
+RETURN_CODE=$?
+fi
+
+# Unstash changes to the working tree that we had stashed
+git stash pop -q
+
+exit $RETURN_CODE
